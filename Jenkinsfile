@@ -4,8 +4,7 @@ pipeline {
     stages {
         stage('Checkout SCM') {
             steps {
-                echo 'Checking source code'
-                bat 'dir'
+                checkout scm
             }
         }
 
@@ -17,13 +16,20 @@ pipeline {
 
         stage('Create Docker Network') {
             steps {
-                bat 'docker network inspect my-devops-network >nul 2>&1 || docker network create my-devops-network'
+                bat '''
+                docker network inspect my-devops-network >nul 2>&1
+                if errorlevel 1 (
+                    docker network create my-devops-network
+                ) else (
+                    echo Network already exists
+                )
+                '''
             }
         }
 
         stage('Remove Old Container') {
             steps {
-                bat 'docker rm -f my-devops-container >nul 2>&1 || exit /b 0'
+                bat 'docker rm -f my-devops-container || exit /b 0'
             }
         }
 
@@ -36,15 +42,14 @@ pipeline {
         stage('Check Running Containers') {
             steps {
                 bat 'docker ps'
-                bat 'docker network inspect my-devops-network'
+                bat 'docker logs my-devops-container'
             }
         }
     }
 
     post {
         always {
-            bat 'echo Build completed > build-log.txt'
-            archiveArtifacts artifacts: 'build-log.txt', fingerprint: true
+            echo 'Pipeline completed'
         }
     }
 }
