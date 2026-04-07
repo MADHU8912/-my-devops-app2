@@ -53,3 +53,9 @@ pipeline {
         }
     }
 }
+stage('Push to Docker Hub') {
+    steps {
+        bat 'docker tag my-devops-app nikhilabba12/my-devops-app:latest'
+        bat 'docker push nikhilabba12/my-devops-app:latest'
+    }
+}
